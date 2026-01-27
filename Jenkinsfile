@@ -6,13 +6,11 @@ pipeline {
         IMAGE_NAME      = "quant-dashboard:latest"
         CONTAINER_NAME  = "quant-dashboard-app"
 
-        // Streamlit runs INSIDE container on 8080
+        // Container listens on 8080, host exposes 8501
         CONTAINER_PORT  = "8080"
-
-        // Jenkins already uses 8080 → expose app on 8501
         HOST_PORT       = "8501"
 
-        // Mounted GCS / local data directory
+        // gcsfuse mount on VM (already mounted)
         DATA_PATH       = "/home/alvigeorge3/quant-dashboard-files"
     }
 
@@ -25,7 +23,7 @@ pipeline {
 
         stage('Checkout Code') {
             steps {
-                echo "📥 Checking out source code"
+                echo "📥 Checking out source code from Git"
                 checkout scm
             }
         }
@@ -34,17 +32,17 @@ pipeline {
             steps {
                 echo "🐳 Building Docker image"
                 sh """
-                docker build -t ${IMAGE_NAME} .
+                  docker build -t ${IMAGE_NAME} .
                 """
             }
         }
 
         stage('Stop Old Container (if any)') {
             steps {
-                echo "🛑 Stopping existing container if running"
+                echo "🛑 Stopping old container if running"
                 sh """
-                docker stop ${CONTAINER_NAME} || true
-                docker rm ${CONTAINER_NAME} || true
+                  docker stop ${CONTAINER_NAME} || true
+                  docker rm ${CONTAINER_NAME} || true
                 """
             }
         }
@@ -53,22 +51,22 @@ pipeline {
             steps {
                 echo "🚀 Starting Streamlit container"
                 sh """
-                docker run -d \
-                  --name ${CONTAINER_NAME} \
-                  -p ${HOST_PORT}:${CONTAINER_PORT} \
-                  -e DATA_PATH=/app/data \
-                  -v ${DATA_PATH}:/app/data \
-                  ${IMAGE_NAME}
+                  docker run -d \
+                    --name ${CONTAINER_NAME} \
+                    -p ${HOST_PORT}:${CONTAINER_PORT} \
+                    -e DATA_PATH=/app/data \
+                    --mount type=bind,source=${DATA_PATH},target=/app/data \
+                    ${IMAGE_NAME}
                 """
             }
         }
 
         stage('Health Check') {
             steps {
-                echo "🩺 Verifying application health"
+                echo "🩺 Performing health check"
                 sh """
-                sleep 20
-                curl -f http://127.0.0.1:${HOST_PORT} || exit 1
+                  sleep 10
+                  curl -f http://localhost:${HOST_PORT} || exit 1
                 """
             }
         }
@@ -76,10 +74,10 @@ pipeline {
 
     post {
         always {
-            echo "🧹 Cleaning up unused Docker containers (safe cleanup)"
+            echo "🧹 Cleaning unused Docker resources (safe for free tier)"
             sh """
-            docker container prune -f || true
-            docker builder prune -f || true
+              docker container prune -f || true
+              docker image prune -f || true
             """
         }
 
