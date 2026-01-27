@@ -11,7 +11,7 @@ pipeline {
         HOST_PORT       = "8501"
 
         // gcsfuse mount on VM (already mounted)
-        DATA_PATH       = "/home/alvigeorge3/quant-dashboard-files"
+        DATA_PATH       = "/mnt/quant-dashboard-files"
     }
 
     options {
