@@ -3,55 +3,53 @@ pipeline {
 
     environment {
         IMAGE_NAME = "quant-dashboard"
-        CONTAINER_NAME = "quant-dashboard-container"
-        // HOST_DATA_PATH must be created/mounted on the VM before running this pipeline
-        HOST_DATA_PATH = "/home/quant_user/quant-dashboard-files" 
+        CONTAINER_NAME = "quant-dashboard"
     }
 
     stages {
-        stage('Build') {
+        stage('Checkout') {
             steps {
-                script {
-                    echo 'Building Docker Image...'
-                    // Build the image tagged with the build number
-                    sh "docker build -t ${IMAGE_NAME}:${BUILD_NUMBER} ."
-                    // Also tag as latest
-                    sh "docker tag ${IMAGE_NAME}:${BUILD_NUMBER} ${IMAGE_NAME}:latest"
-                }
+                git branch: 'main',
+                    url: 'https://github.com/shareitalike/quant-strategy-analytics-gcp.git'
             }
         }
 
-        stage('Deploy') {
+        stage('Build Image') {
             steps {
-                script {
-                    echo 'Deploying Container...'
-                    
-                    // Stop running container if it exists
-                    sh "docker stop ${CONTAINER_NAME} || true"
-                    sh "docker rm ${CONTAINER_NAME} || true"
-
-                    // specific run command for low-memory environments (optional flags can be added)
-                    sh """
-                        docker run -d \
-                        --name ${CONTAINER_NAME} \
-                        -p 8501:8501 \
-                        -e DATA_PATH="/app/data" \
-                        -v ${HOST_DATA_PATH}:/app/data \
-                        --restart unless-stopped \
-                        ${IMAGE_NAME}:latest
-                    """
-                }
+                sh '''
+                  docker build -t $IMAGE_NAME:latest .
+                '''
             }
         }
 
-        stage('Clean Up') {
+        stage('Stop Old Container') {
             steps {
-                script {
-                    echo 'Pruning old images to save disk space...'
-                    // -f forces cleanup without prompt
-                    sh "docker image prune -f"
-                }
+                sh '''
+                  docker stop $CONTAINER_NAME || true
+                  docker rm $CONTAINER_NAME || true
+                '''
             }
+        }
+
+        stage('Run Container') {
+            steps {
+                sh '''
+                  docker run -d \
+                    --name $CONTAINER_NAME \
+                    -p 8080:8080 \
+                    -v $(pwd)/data:/app/data \
+                    $IMAGE_NAME:latest
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Deployment successful"
+        }
+        failure {
+            echo "❌ Deployment failed"
         }
     }
 }
