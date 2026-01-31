@@ -24,3 +24,6 @@ jenkins-key.json
 
 # Temporary files
 /tmp/
+
+# Filesystem snapshots
+.snapshots/
