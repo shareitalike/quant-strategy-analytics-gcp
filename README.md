@@ -37,17 +37,17 @@ The application follows a **modular layered architecture** designed to scale fro
 
 ```mermaid
 graph TD
-    User([User]) <--> UI[Streamlit UI (app.py)]
+    User(["User"]) <--> UI["Streamlit UI (app.py)"]
     
     subgraph "Application Core"
-        UI --> Logic[Metrics Engine (metrics.py)]
-        UI --> Viz[Visualization Layer (charts.py)]
-        UI --> IO[Data IO Layer (io_layer.py)]
+        UI --> Logic["Metrics Engine (metrics.py)"]
+        UI --> Viz["Visualization Layer (charts.py)"]
+        UI --> IO["Data IO Layer (io_layer.py)"]
     end
     
     subgraph "Data Sources"
-        IO <--> Local[Local Filesystem]
-        IO <--> GCS[Google Cloud Storage]
+        IO <--> Local["Local Filesystem"]
+        IO <--> GCS["Google Cloud Storage"]
     end
 
     Logic -->|Computed Statistics| UI
