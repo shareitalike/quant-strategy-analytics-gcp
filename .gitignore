@@ -27,3 +27,10 @@ jenkins-key.json
 
 # Filesystem snapshots
 .snapshots/
+
+# Terraform (CRITICAL: Do not remove)
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+.terraform.lock.hcl
