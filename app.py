@@ -96,6 +96,21 @@ def load_data_cached(file_path):
 st.sidebar.title("📊 Trading Dashboard")
 st.sidebar.markdown("---")
 
+# --- COMMON PARAMETERS (Moved Up) ---
+c_cap, c_rf = st.sidebar.columns(2)
+investment = c_cap.number_input("💰 Initial Capital (₹):", value=125000, step=5000)
+rf_rate = c_rf.number_input("🏦 Risk-Free Rate (%):", value=0.0, step=0.5, help="Annual Risk-Free Rate.")
+
+with st.sidebar.expander("🛑 Reality Check (Costs & Taxes)", expanded=False):
+    slippage = st.number_input("Cost per Trade (₹):", value=0.0, step=10.0, help="Slippage + Brokerage per trade")
+    tax_rate = st.number_input("Tax / Fee Rate (%):", value=0.0, step=5.0, max_value=100.0,
+                               help="Annual % deducted from profits")
+
+use_compound = st.sidebar.checkbox("Enable Compounding (CAGR)", value=False,
+                                   help="Switches ROI to Compound Annual Growth Rate.")
+st.sidebar.markdown("---")
+
+
 st.sidebar.caption(f"📡 Data Mode: **{DATA_MODE}**")
 
 # ---------- LOCAL MODE ----------
