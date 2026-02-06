@@ -164,6 +164,48 @@ Refer to the [Deployment Guide](deployment_guide.md) for a step-by-step tutorial
 2. Configuring Jenkins for automated builds.
 3. Mounting GCS buckets using `gcsfuse`.
 
+### Infrastructure as Code (Terraform)
+For a fully automated deployment, usage the `terraform/` directory:
+
+1. **Install Terraform**: [Download Here](https://developer.hashicorp.com/terraform/install).
+2. **Initialize**:
+   ```bash
+   cd terraform
+   terraform init
+   ```
+3. **Plan & Apply**:
+   ```bash
+   terraform apply -var="project_id=YOUR_PROJECT_ID" -var="bucket_name=YOUR_UNIQUE_BUCKET_NAME"
+   ```
+4. **Output**:
+   Terraform will print the `instance_ip`.
+
+### Manual Deployment (Docker Only)
+If utilizing the simplified "Docker-Ready" infrastructure:
+
+1.  **SSH into the VM**:
+    ```bash
+    gcloud compute ssh quant-dashboard-vm
+    ```
+2.  **Clone the Repo**:
+    ```bash
+    git clone https://github.com/shareitalike/quant-strategy-analytics-gcp.git
+    cd quant-strategy-analytics-gcp
+    ```
+3.  **Build & Run**:
+    ```bash
+    # Build the image
+    sudo docker build -t quant-app .
+
+    # Run mapping: Host Port 8501 -> Container Port 8080 (where Streamlit runs)
+    sudo docker run -d -p 8501:8080 \
+      -v /home/ubuntu/quant-dashboard-files:/app/data \
+      -e DATA_MODE=LOCAL \
+      -e DATA_PATH=/app/data \
+      quant-app
+    ```
+4.  **Access**: `http://<VM_IP>:8501`.
+
 ---
 
 ## 🤝 Contributing
